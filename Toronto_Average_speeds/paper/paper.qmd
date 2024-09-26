@@ -1,0 +1,116 @@
+---
+title: "Toronto's Average Recorded Car Speeds Reflects That The City's Traffic Isn't That Bad As It Seems To Be"
+author: 
+  - Kevin Shao
+thanks: "Code and data used in this analysis can be found at: https://github.com/KevinShao1357/Paper1-Updated.git"
+date: "27 September 2024"
+date-format: long
+abstract: "Road traffic is a significant issue nowadays as many people rely on driving cars for work, school, and leisure purposes. Data of recorded car speeds at various locations with speed display signs present is used to discover Toronto's road traffic severity. After data processing and analysis with the use of R, it can be inferred that there is no evidence that Toronto has comparatively worse traffic compared with global statistics. However, a more thorough research with the use of more data sets should be conducted for more accurate results."
+format: pdf
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+# install.packages("tidyverse")
+# install.packages("opendatatoronto")
+# install.packages("janitor")
+# install.packages("dplyr")
+# install.packages("readr")
+# install.packages("gt")
+# install.packages("AER")
+# install.packages("knitr")
+
+library(tidyverse)
+library(opendatatoronto)
+library(janitor)
+library(dplyr)
+library(readr)
+library(gt)
+library(AER)
+library(knitr)
+
+cleaned_data2 <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
+```
+
+# Introduction
+
+Cars are one of our most frequently used transportation method, but automobiles also produce multiple issues, such as traffic accidents and traffic. In fact, with many vehicles driving on road networks, numerous metropolitan areas have been experiencing severe traffic, largely increasing people's everyday commuting times. In 2022, Toronto was ranked seventh in the world and first in Canada for bad traffic, and people in Toronto speed 118 hours on congested road (@citectv). Toronto's severe traffic makes it meaning to improve the city's road network, and a useful data set may be a collection of recorded driving speeds, as low car speeds may reflect congestion on corresponding roads. Such numerical data is also suitable for completing statistical analysis, such as calculating mean (average speed) and standard deviation (a measure of how spread-out numbers, or data points, are).
+
+The purpose of this study is to analyze the extent Toronto's road traffic in comparison with global performance, which is the first step for deciding how to improve Toronto's road network for less congestion. Here, I will measure the extent of traffic/congestion using average driving speeds (higher speeds means less traffic) since it is a straightforward factor. Therefore, the chosen data set should be most independent from other confounding variables. I would like to eliminate the factor of dangerous driving at high speeds. A data set recording speeds at locations with present speed display signs is a reasonable solution, as speed display signs may give drivers incentives to drive carefully, as it implicates that devices which enforce speed limits may be present nearby. Therefore, the chosen data set for this study is 'Mobile Watch Your Speed Program – Speed Summary', one of the few provided by Open Data Toronto which presents recorded car speeds (@citedataset).
+
+After completing data processing and analysis (the 'data' introduces more detail on this), I can ultimately infer that there is no evidence that Toronto has comparatively worse-off road traffic. This study may give Toronto Transportation Services a detailed image of Toronto's road traffic performance, and may also help Toronto choose more ideal locations to place their speed display signs.
+
+# Data
+
+## Raw Data
+
+'Mobile Watch Your Speed Program – Speed Summary' on Open Data Toronto was published by Toronto Transportation Services and was last renewed on 5 September 2024. This data set provides data about recorded driving speeds of cars which pass by speed display signs. Speed display signs uses radar devices to measure speeds of oncoming cars and displays their speeds on LED screens, reminding drivers to obey speed limits. The equipped radar device detects a change in frequency of returned radar signals, in proportion to speed by the Doppler Effect (@citeradar). These speed display signs are portable and are moved around locations across Toronto in a monthly basis (@citedataset).
+
+All data processing, including cleaning and analysis, are performed by programming in R language (@citeR). The R code with detailed notes of data cleaning are included in the 'scripts' section of the GitHub repo link shown in the footnote, while other approaches related to data are explained in the following sections. In this study, the following R packages are used: tidyverse (@citetidyverse), readr (@citereadr), dplyr (@citedplyr), janitor (@citejanitor), ggplot2 (@citeggplot), knitr (@citeknitr), opendatatoronto (@citeOpenDataToronto), and tibble (@citetibble).
+
+## Data Processing
+
+First of all, the final data file prepared for analysis only consists the average recorded speeds for each location, since average recorded speeds is less affected by outliers, such as speeding vehicles. Average speeds take account of confounding factors, ideal for analyzing Toronto's overall road traffic. In this data set, there is one average speed per location. Units for average recorded speeds are in kilometers per hour (km/h).
+
+Before using the data for graphs and tables, I made sure that all the data elements of the data are valid speeds by checking if there are any negative values, NA values, and if all elements are numeric. In this case, if the speed is recorded to be 0, it is included in the data set and would be considered valid. I confirmed that the elements arein correct format, so there is no need to change anything in 'analysis_data'. A sample of the final processed data is shown in @tbl-table1 below.
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: tbl-table1
+#| tbl-cap: "Distribution of the number of doctor visits"
+
+knitr::kable(cleaned_data2[1:10,1[]], align = "c", col.names = ("Recorded Mean Speeds (km/h)"))
+```
+
+## Data Presentation and Analysis
+
+To get a clearer image of of the data distribution, @fig-histogram is a histogram  produced using the processed data.
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-histogram
+#| fig-cap: "Histogram of Average Recorded Speeds"
+
+cleaned_data2 |>
+  ggplot(aes(x = mean_speed)) +
+  geom_histogram(stat = "count") +
+  theme_minimal() + 
+  labs(x = "mean speed (km/h)")
+```
+
+From @fig-histogram, I can infer that there are two outliers at 0 and 80 km/h respectively, and The mean these speeds is roughly around 30 km/h. The outlier at 80 km/h has a much lower frequency than that at 0 km/h. There are no data points in the interval of 0 to 5 km/h. With consideration of the relatively high frequency of observations at 0 km/h, it can be inffered is that all values between 0 to 5 km/h are rounded to 0 km/h, since there should not be no values between a 5 km/h interval given a data set with roughly 12000 observations in total. If this hypothesis holds true, it can be concluded that there is a relatively high frequency of cars in Toronto that are experiencing congestion may be concluded. If the car speed is recorded as 0 km/h, it may be parking and the data is recorded by error, but if a car is driving at a very low speed of 0 to 5 km/h, it would be either in traffic or just accelerating after a traffic light turns green. However, the prior case is much more likely to occur, bas being in traffic means that cars tend to drive at low speeds for longer durations. Moreover, if the speed display signs are located just beside a traffic light, its radar would track a car either driving fast with a green light or a car just accelerating when the traffic light turns green, so the average recorded speeds would be less likely to be as low as 0 to 5 km/h.
+
+To acquire more supporting data, @tbl-table2 below is created to represent the processed data's summary statistics. 
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: tbl-table2
+#| tbl-cap: "Summary Statistics of Average Recorded Speeds"
+
+d <- c(mean(cleaned_data2$mean_speed), sd(cleaned_data2$mean_speed), max(cleaned_data2$mean_speed), min(cleaned_data2$mean_speed))
+          
+knitr::kable(c(mean = mean(cleaned_data2$mean_speed), standard_deviation = sd(cleaned_data2$mean_speed), maximum = max(cleaned_data2$mean_speed), minimum = min(cleaned_data2$mean_speed)), align = "c", col.names = ("Values of Corresponding Statistics (km/h, Rounded to Four Decimal Places)"))
+```
+According to @tbl-table2, the mean, standard deviation, maximum, and minimum of the speeds are 31.9, 11.4, 80, and 0 km/h respectively, which cohere to the previously-introduced hypothesis that there is a relatively high frequency of cars experiencing ongoing traffic at locations with present speed display signs.
+
+Considering the mean and standard deviation of average driving speeds in Toronto, these values are actually higher than the global average of 30 km/h measured in 2022 (@citemovotiv). The average driving speeds in Toronto have also improved compared to that of Toronto two years ago, measured as 24 km/h in 2022, and is much higher than the 20 km/h speed during peak traffic (@citectv). Note that the average recorded speeds in Toronto are measured where speed display signs are present, and such signs give drivers incentives to drive more carefully, and more slowly, than usual, meaning that the measured speeds in Toronto may be even lower than the actual value. 
+
+Although it may be hard to conclude that Toronto's traffic are better-off compared to global circumstances just by this one data set, there is no evidence that Toronto has comparatively bad traffic given the high average recorded speeds displayed in this chosen data set.
+
+There are also a few limitations of this chosen data set. First of all, the data set only contains measured car speeds at locations where speed display signs are present, so the speeds may be under-measured, as the use of only using average data already minimized the impact of confounding factors such as speeding vehicles. Secondly, the data set does not measure speeds at all location in Toronto, so locations where severe congestion often occur may be ignored. It can be inferred that Toronto Transportation Services chose to assemble speed display signs at these locations largely due to multiple cases of captured dangerous driving, which conflicts with cases of severe traffic, since drivers have no way to drive fast during severe traffic.
+
+However, given such limitations, although more data sets must be combined to get a thorough conclusion, the inference that there is no evidence that Toronto has comparatively bad traffic can still be made.
+
+# LLMs
+
+Statement on LLM usage: No LLMs have been used in this paper for any purpose.
+
+# References
